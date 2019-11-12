@@ -114,6 +114,7 @@ class Myloader(data.Dataset):
 
 
     def __getitem__(self, index):
+        a=0
         path_dark, path_light, left, right = self.imgs[index]
         ##
         img_dark = self.loader(path_dark)
