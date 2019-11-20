@@ -5,11 +5,14 @@ from dataloader import *
 from visualization import *
 from termcolor import colored
 import torch
+from torch import optim
 import torch.backends.cudnn as cudnn
 from checkpoint import *
 import random
 from tensorboardX import SummaryWriter
 from trainer import *
+from models import resnet
+from model import generate_model
 
 def dataparallel(model, ngpus, gpu0=0):
     if ngpus == 0:
@@ -73,9 +76,27 @@ def main(net_opt=None):
         check_point_params = check_point.resumemodel()
     else:
         check_point_params = check_point.check_point_params
-
+    if opt.nesterov:
+        dampening = 0
+    else:
+        dampening = opt.dampening
     greedynet = None
-    optimizer = check_point_params['opts']
+    # optimizer = check_point_params['opts']
+
+    ##model
+    model, parameters = generate_model (opt)
+    ##model
+
+    ####optimizer
+    optimizer = optim.SGD (
+        parameters,
+        lr=opt.LR,
+        momentum=opt.momentum,
+        dampening=dampening,
+        weight_decay=opt.weightDecay,
+        nesterov=opt.nesterov)
+
+    ####
     start_stage = check_point_params['stage'] or 0
     start_epoch = check_point_params['resume_epoch'] or 0
     if check_point_params['resume_epoch'] is not None:
@@ -85,23 +106,8 @@ def main(net_opt=None):
         start_stage += 1
 
     # model
-    if opt.netType == 'ResNet':
-        model = ResNetImageNet(
-            opt=opt, num_classes=opt.nClasses, retrain=check_point_params['model'])
-    elif opt.netType == 'DenseNet':
-        model = DenseNetImageNet(
-            opt=opt, num_classes=opt.nClasses, retrain=check_point_params['model'])
-    elif opt.netType == 'Inception-v3':
-        model = Inception3ImageNet(
-            opt=opt, num_classes=opt.nClasses, retrain=check_point_params['model'])
-    elif opt.netType == 'AlexNet':
-        model = AlexNetImageNet(
-            opt=opt, num_classes=opt.nClasses, retrain=check_point_params['model'])
-    elif opt.netType == 'VGG':
-        model = VGGImageNet(
-            opt=opt, num_classes=opt.nClasses, retrain=check_point_params['model'])
-    else:
-        assert False, "invalid net type"
+
+    #
 
     
     model = dataparallel(model, opt.nGPU, opt.GPU)
