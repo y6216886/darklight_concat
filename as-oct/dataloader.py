@@ -16,7 +16,7 @@ class DataLoader(object):
         self.n_threads = n_threads
         self.ten_crop = ten_crop
         
-        if self.dataset == "asoct":
+        if self.dataset == "asoct" or self.dataset =="brightVsDark":
             print("|===>Creating %s Data Loader" % (self.dataset))
             self.train_loader, self.test_loader = self.asoct_data(data_path=self.data_path, label_path=self.label_path)
         elif self.dataset == "validation":
@@ -58,10 +58,10 @@ class DataLoader(object):
 
     def asoct_data(self, data_path, label_path):
         imgSize = 512
-        train_dir_dark = data_path + "train_d_only_narrow.txt"  #
-        train_dir_light = data_path + "train_l_only_narrow.txt" #
-        test_dir_dark = data_path + "val_d_only_narrow.txt"     #  数据集尚未划分好，等待修改
-        test_dir_light = data_path + "val_l_only_narrow.txt"    #  等待修改
+        train_dir_dark = data_path + "Forcat_train_d_1.txt"  #
+        train_dir_light = data_path + "Forcat_train_l_1.txt" #
+        test_dir_dark = data_path + "Forcat_val_d_1.txt"     #  数据集尚未划分好，等待修改
+        test_dir_light = data_path + "Forcat_val_l_1.txt"    #  等待修改
         normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                          std=[0.229, 0.224, 0.225])
 

@@ -5,7 +5,7 @@
       <paths name="yangyifan@202.38.200.184:22">
         <serverdata>
           <mappings>
-            <mapping deploy="/usr/home2/code/darklight_concat" local="$PROJECT_DIR$" web="/" />
+            <mapping deploy="/usr/home2/code/darklight_concat/as-oct" local="$PROJECT_DIR$/as-oct" web="/" />
           </mappings>
         </serverdata>
       </paths>

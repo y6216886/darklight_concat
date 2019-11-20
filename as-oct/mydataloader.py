@@ -44,6 +44,8 @@ def pil_loader(path):
 
 def make_dataset(dir_dark,dir_light, label_df):
     images = []
+    index= 0
+    itemlist = []
     for line1, line2 in zip(open(dir_dark), open(dir_light)):
         img_path_dark_org = line1.rstrip('\n')
         img_path_dark_org = img_path_dark_org.rstrip ('\r')
@@ -57,10 +59,6 @@ def make_dataset(dir_dark,dir_light, label_df):
         img_path_light_org = img_path_light_org.rstrip ('\r')
         img_path_light = img_path_light_org.split ('/')[-1]
 
-        # img_id = re.sub('.jpg', '', img_path.split('/')[-1])
-        # flag = img_path_light.split ("_")[1]
-        # img_id = img_path_dark.split ("_")[0].split ("-")[0:2] + img_path_dark.split ("_")[-1].strip (".jpg")
-        ##
         if flag =="R":
             img_left_label = label_df.loc[img_id, 'od_left']
             img_right_label = label_df.loc[img_id, 'od_right']
@@ -69,16 +67,14 @@ def make_dataset(dir_dark,dir_light, label_df):
             img_right_label = label_df.loc[img_id, 'od_right']
         else:
             print("filename load error not Left or Right filename:", img_id)
-        # if img_left_label == 0 or img_right_label == 0:
-        #     continue
-        # if img_left_label == 4 or img_right_label == 4:
-        #     continue
-        # if img_left_label == 2 or img_left_label == 3 :
-        #     img_left_label = 2
-        # if img_right_label == 2 or img_right_label == 3 :
-        #     img_right_label = 2
         item = (img_path_dark_org, img_path_light_org, img_left_label, img_right_label)
-        images.append(item)
+        itemlist.append(item)
+        if int(index) ==127:
+            images.append(itemlist)
+            itemlist=[]
+            index = 0
+            continue
+        index += 1
     return images
 
 
@@ -114,28 +110,17 @@ class Myloader(data.Dataset):
 
 
     def __getitem__(self, index):
-        a=0
-        path_dark, path_light, left, right = self.imgs[index]
-        ##
-        img_dark = self.loader(path_dark)
+        print("》》》》》self.imgs", self.imgs[index])
+        for path_dark, path_light, left, right in self.imgs[index]:
 
-        left_region = (0, 0, img_dark.size[0]/2, img_dark.size[1])
-        right_region = (img_dark.size[0]/2, 0, img_dark.size[0], img_dark.size[1])
-        img_dark_leftRegion = img_dark.crop (left_region)
-        img_dark_rightRegion = img_dark.crop (right_region)
-        # print("size after crop", np.max(np.array(img_dark_rightRegion)))
-        img_dark_leftRegion= self.transform (img_dark_leftRegion)
-        img_dark_rightRegion = self.transform (img_dark_rightRegion)
-        ##
-        img_light = self.loader(path_light)
+            img_dark = self.loader(path_dark)
+            img_dark= self.transform (img_dark)
+            img_light = self.loader(path_light)
+            img_light= self.transform (img_light)
 
-        img_light_leftRegion = img_light.crop (left_region)
-        img_light_rightRegion = img_light.crop (right_region)
-        img_light_leftRegion= self.transform (img_light_leftRegion)
-        img_light_rightRegion = self.transform (img_light_rightRegion)
 
-        img = (img_dark_leftRegion, img_dark_rightRegion, img_light_leftRegion, img_light_rightRegion)
-        labels = (left, right)
+            img = (img_dark, img_light)
+            labels = (left, right)
         return img, labels
 
     def __len__(self):

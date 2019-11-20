@@ -227,11 +227,12 @@ class Trainer(object):
         #                                              eps=1,
         #                                              momentum=self.opt.momentum,
         #                                              weight_decay=self.opt.weightDecay)
-        self.optimzer = optimizer or torch.optim.SGD(self.model.parameters(),
-                                                     lr=self.lr,
-                                                     momentum=self.opt.momentum,
-                                                     weight_decay=self.opt.weightDecay,
-                                                     nesterov=True)
+        self.optimzer = optimizer
+        #or torch.optim.SGD(self.model.parameters(),lr=self.lr,momentum=self.opt.momentum,weight_decay=self.opt.weightDecay,nesterov=True)
+
+
+
+
 
 
     def updateopts(self):
@@ -248,16 +249,10 @@ class Trainer(object):
         for param_group in self.optimzer.param_groups:
             param_group['lr'] = self.lr
 
-    def forward(self, img_dark_leftRegion_var, img_dark_rightRegion_var, img_light_leftRegion_var, img_light_rightRegion_var, leftlabels=None, rightlabels=None):
+    def forward(self, img_dark,  img_light, leftlabels=None, rightlabels=None):
         # forward and backward and optimize
-        leftRegionPair  = (img_dark_leftRegion_var, img_light_leftRegion_var)
-        rightRegionPair = (img_dark_rightRegion_var, img_light_rightRegion_var)
-        output_l = self.model(leftRegionPair)
-        output_r = self.model(rightRegionPair)
-        # print("output!!!",output_l.size())
-        # print("output",output_l)
-        # print("label!!!",leftlabels.size())
-        # print("label", leftlabels)
+        output_l = self.model(img_dark)
+        output_r = self.model(img_light)
         if leftlabels is not None and rightlabels is not None:
             l_loss = self.criterion(output_l, leftlabels)
             r_loss = self.criterion(output_r, rightlabels)
@@ -295,24 +290,23 @@ class Trainer(object):
             left_label,right_label = labels
 
             ####  process image
-            img_dark_leftRegion, img_dark_rightRegion, img_light_leftRegion, img_light_rightRegion = images
+            img_dark, img_light = images
 
-            left_labels = generateTarget (img_dark_leftRegion, left_label)
+            left_labels = generateTarget (img_dark, left_label)
             left_reduce_labels = left_labels
             left_labels = left_labels.cuda ()
             left_labels_var = Variable (left_labels)
 
-            right_labels = generateTarget (img_dark_leftRegion, right_label)
+            right_labels = generateTarget (img_dark, right_label)
             right_reduce_labels = right_labels
             right_labels = right_labels.cuda ()
             right_labels_var = Variable (right_labels)
 
-            img_dark_leftRegion_var = Variable (img_dark_leftRegion.cuda ())
-            img_dark_rightRegion_var = Variable (img_dark_rightRegion.cuda ())
-            img_light_leftRegion_var = Variable (img_light_leftRegion.cuda ())
-            img_light_rightRegion_var = Variable (img_light_rightRegion.cuda ())
+            img_dark = Variable (img_dark.cuda ())
+            img_light = Variable (img_light.cuda ())
 
-            l_output, r_output, loss = self.forward (img_dark_leftRegion_var, img_dark_rightRegion_var, img_light_leftRegion_var, img_light_rightRegion_var,left_labels_var, right_labels_var)
+
+            l_output, r_output, loss = self.forward (img_dark, img_light, left_labels_var, right_labels_var)
 
             r_prediction = r_output.data.cpu ()
 
